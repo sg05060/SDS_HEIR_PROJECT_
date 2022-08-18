@@ -33,7 +33,9 @@
 //          write_o: state of module. reapresent that module is write the data now.
 //          done_o: state of module. represent the done state. 
 //      
-//      Memory I/F
+// Memory I/F
+//
+//
 //          addr_b0_o/addr_b1_o: address of memory that user want to access.
 //          ce_b0_o/ce_b1_o: chip enable
 //          we_b0_o/we_b1_o: write enable. 0 means read mode and 1 means write mode
@@ -44,11 +46,11 @@
 
 module BRAM_accessor 
 # (
-    parameter CNT_BIT = 
+    parameter CNT_BIT = 31
 
     /* parameter for BRAM */
-    parameter DWIDTH_1 
-    parameter DWIDTH_2 
+    parameter DWIDTH_1 = 32
+    parameter DWIDTH_2 = 32
     parameter AWIDTH = 
     parameter MEM_SIZE 
     parameter IN_DATA_WIDTH 
