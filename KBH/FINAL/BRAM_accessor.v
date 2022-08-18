@@ -48,7 +48,7 @@ module BRAM_accessor
 
     /* parameter for BRAM */
     parameter DWIDTH_1 = 32,
-    parameter DWIDTH_2 = 32,
+    parameter DWIDTH_2 = ???,
     parameter AWIDTH = 8,
     parameter MEM_SIZE = 256,
     parameter IN_DATA_WIDTH = 8 //한 코어에 들어가는 데이터너비
@@ -70,7 +70,7 @@ module BRAM_accessor
 
     /* State_Outputs */
     output idle_o,
-    output run_o, //custome adding
+    //output run_o, //custome adding
     output read_o,
     output write_o,
     output done_o,
@@ -140,10 +140,8 @@ module BRAM_accessor
         .clk    ( clk    ),
         .rst_n  ( reset_n  ),
         .idle_i ( idle_o_from_FSM ),
-        .run_i  ( run_o_from_FSM  ),
         .done_i ( done_o_from_FSM ),
         .idle_o ( idle_o ), // final output
-        .run_o  ( run_o  ), // final output
         .done_o  ( done_o  ) // final output
     );
 
@@ -177,7 +175,7 @@ module BRAM_accessor
     assign addr_b0_o = cnt_o_from_counter;
     assign ce_b0_o = valid_o_from_counter;
     assign we_b0_o = !valid_o_from_counter; // read only
-    assign d_b0_o = 0; // ======여기 뭟 넣어야 되지?
+    //assign d_bo_0 = 안함 // ======여기 뭟 넣어야 되지?
     //읽어온 값(q)은 위에 인스트에서 처리
 
     /* Memory I/F output for BRAM1 */
