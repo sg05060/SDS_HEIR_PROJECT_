@@ -50,10 +50,10 @@ module BRAM_accessor
 
     /* parameter for BRAM */
     parameter DWIDTH_1 = 32
-    parameter DWIDTH_2 = 32
-    parameter AWIDTH = 
-    parameter MEM_SIZE 
-    parameter IN_DATA_WIDTH 
+    parameter DWIDTH_2 = 64
+    parameter AWIDTH = 8
+    parameter MEM_SIZE = 256
+    parameter IN_DATA_WIDTH = 8 
 )
 (
     /* Special Inputs*/
