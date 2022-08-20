@@ -48,7 +48,7 @@ module BRAM_accessor
 
     /* parameter for BRAM */
     parameter DWIDTH_1 = 32,
-    parameter DWIDTH_2 = ???,
+    parameter DWIDTH_2 = 64,
     parameter AWIDTH = 8,
     parameter MEM_SIZE = 256,
     parameter IN_DATA_WIDTH = 8 //한 코어에 들어가는 데이터너비
@@ -159,8 +159,8 @@ module BRAM_accessor
                 .valid_i       ( valid_o_from_counter     ),
                 .run_i         ( start_run_i         ),
                 .valid_o       ( valid_o_from_acc_core_complete   ),
-                .result_o      ( d_b1_o[(IN_DATA_WIDTH)*(i+1) -1
-                                :(IN_DATA_WIDTH)*i]) // final output
+                .result_o      ( d_b1_o[(DWIDTH_2/(DWIDTH_1/IN_DATA_WIDTH))*(i+1) -1
+                                :(DWIDTH_2/(DWIDTH_1/IN_DATA_WIDTH))*i]) // final output
             );
         end
     endgenerate
