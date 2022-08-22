@@ -53,7 +53,7 @@ module BRAM_accessor
     parameter DWIDTH_2 = 64,
     parameter AWIDTH = 8,
     parameter MEM_SIZE = 256,
-    parameter IN_DATA_WIDTH = 8 
+    parameter IN_DATA_WIDTH = 8
 )
 (
     /* Special Inputs*/
@@ -89,81 +89,174 @@ module BRAM_accessor
     output [DWIDTH_2 - 1 : 0] d_b1_o
 );
 
-    /* localparam */
-    localparam IDLE = 2'b00;
-    localparam RUN  = 2'b01;
-    localparam DONE = 2'b10;
+    // wire of read_counter_top
+    wire r_idle_w;
+    wire r_run_w;
+    wire r_done_w;
+    wire r_cnt_w;
 
-    /* Total Counter_top */
-    
-    //Counter_top reg
-    reg [CNT_BIT - 1 : 0] cnt_val;
-    reg [1:0] c_state, n_state;
-    reg [CNT_BIT - 1 : 0] cnt, cnt_n;
+    //read counter inst
+    Counter#(
+        .CNT_WIDTH ( AWIDTH )
+    )u_Counter_read(
+        .clk    ( clk     ),
+        .rst_n  ( reset_n ),
+        .en     ( r_run_w ),
+        .cnt_o  ( r_cnt_w )
+    );
 
-    //Total FSM
+    //read counter_fsm inst
+    Counter_fsm#(
+        .CNT_WIDTH ( AWIDTH )
+    )u_Counter_fsm_read(
+        .clk       ( clk         ),
+        .rst_n     ( reset_n     ),
+        .start_i   ( start_run_i ),
+        .cnt_val_i ( run_count_i ),
+        .cnt_i     ( r_cnt_w     ),
+        .idle_o    ( r_idle_w    ),
+        .run_o     ( r_run_w     ),
+        .done_o    ( r_done_w    )
+    );
 
-    // cnt val capture
-    always @(posedge clk, negedge reset_n) begin
-        if (!reset_n) begin
-            cnt_val <= 0;        
-        end else if (start_run_i) begin
-            cnt_val <= run_count_i;        
-        end 
-    end
+    // wire of check
+    wire check_w;
 
-    //Fsm seq
+    // check inst
+    check u_check(
+        .clk     ( clk      ),
+        .rst_n   ( reset_n  ),
+        .check_i ( r_run_w  ),
+        .done_i  ( r_done_w ),
+        .check_o ( check_w  )
+    );
+
+    //assign of bram0
+    assign addr_b0_o = r_cnt_w;
+    assign ce_b0_o = check_w;
+    assign we_b0_o = 0;
+    assign d_b0_o = 0;
+
+
+    //acc_core
+    reg [DWIDTH_1 - 1 : 0] number_n;
+    reg [IN_DATA_WIDTH - 1 : 0] number_1, number_2, number_3, number_4;
+
+    /* seperate number by 4, 32 = 8 + 8 + 8 + 8 */
+    //acc_core seq
     always@(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
-            c_state <= IDLE;
+            number_n <= 0;
         end else begin
-            c_state <= n_state;
-        end
+            number_n <= q_b0_i;
+            number_1 <= number_n[1 * IN_DATA_WIDTH - 1 : 0];
+            number_2 <= number_n[2 * IN_DATA_WIDTH - 1 : 1 * IN_DATA_WIDTH];
+            number_3 <= number_n[3 * IN_DATA_WIDTH - 1 : 2 * IN_DATA_WIDTH];
+            number_4 <= number_n[4 * IN_DATA_WIDTH - 1 : 3 * IN_DATA_WIDTH];
+        end        
     end
 
-    //Fsm comb
-    always @(*) begin
-        n_state = c_state;   
-        case (c_state) 
-            IDLE : begin
-                if (start_run_i) begin
-                    n_state = RUN;  
-                end 
-            end
-            RUN : begin
-                if (cnt == cnt_val-1) begin
-                    n_state = DONE; 
-                end
-            end
-            DONE : begin
-                n_state = IDLE; 
-            end
-        endcase
-    end
+    wire valid_1, valid_2, valid_3, valid_4;
+    wire [2 * IN_DATA_WIDTH -1 : 0] result_1, result_2, result_3, result_4;
+    wire total_valid_o;
 
-    //Total Counter
+    //acc_core_first
+    acc_core_complete#(
+        .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
+        .DWIDTH        ( 2 * IN_DATA_WIDTH )
+    )u_acc_core_complete_1(
+        .clk           ( clk           ),
+        .reset_n       ( reset_n       ),
+        .number_i      ( number_1      ),
+        .valid_i       ( check_w       ),
+        .run_i         ( start_run_i   ),
+        .valid_o       ( valid_1       ),
+        .result_o      ( result_1      )
+    );
 
-    //Counter seq 
-    always @(posedge clk, negedge reset_n) begin
-        if (!reset_n) begin
-            cnt <= 0;
-        end else begin
-            cnt <= cnt_n;
-        end
-    end
+    //acc_core_second
+    acc_core_complete#(
+        .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
+        .DWIDTH        ( 2 * IN_DATA_WIDTH )
+    )u_acc_core_complete_2(
+        .clk           ( clk           ),
+        .reset_n       ( reset_n       ),
+        .number_i      ( number_2      ),
+        .valid_i       ( check_w       ),
+        .run_i         ( start_run_i   ),
+        .valid_o       ( valid_2       ),
+        .result_o      ( result_2      )
+    );
 
-    //Counter comb
-    always @(*) begin
-        cnt_n = cnt; 
-        if (c_state == RUN) begin
-            cnt_n = cnt + 1;
-        end
-    end
+    //acc_core_third
+    acc_core_complete#(
+        .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
+        .DWIDTH        ( 2 * IN_DATA_WIDTH )
+    )u_acc_core_complete_3(
+        .clk           ( clk           ),
+        .reset_n       ( reset_n       ),
+        .number_i      ( number_3      ),
+        .valid_i       ( check_w       ),
+        .run_i         ( start_run_i   ),
+        .valid_o       ( valid_3       ),
+        .result_o      ( result_3      )
+    );
 
-    assign addr_b0_o =    cnt_n;
-    assign read_o    =    (c_state == RUN);
-    assign ce_b0_o   =    (c_state == RUN);
-    assign we_b0_o   =    0;
-    assign d_b0_o    =    0;
+    //acc_core_fourth
+    acc_core_complete#(
+        .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
+        .DWIDTH        ( 2 * IN_DATA_WIDTH )
+    )u_acc_core_complete_4(
+        .clk           ( clk           ),
+        .reset_n       ( reset_n       ),
+        .number_i      ( number_4      ),
+        .valid_i       ( check_w       ),
+        .run_i         ( start_run_i   ),
+        .valid_o       ( valid_4       ),
+        .result_o      ( result_4      )
+    );
+
+    assign total_valid_o = (valid_1 & valid_2 & valid_3 & valid_4);
+
+    wire w_idle_w;
+    wire w_run_w;
+    wire w_done_w;
+    wire w_cnt_w;
+
+    //write counter inst
+    Counter#(
+        .CNT_WIDTH ( AWIDTH )
+    )u_Counter_write(
+        .clk    ( clk     ),
+        .rst_n  ( reset_n ),
+        .en     ( w_run_w ),
+        .cnt_o  ( w_cnt_w )
+    );
+
+    //read counter_fsm inst
+    Counter_fsm#(
+        .CNT_WIDTH ( AWIDTH )
+    )u_Counter_fsm_write(
+        .clk       ( clk          ),
+        .rst_n     ( reset_n      ),
+        .start_i   ( total_valid_o),
+        .cnt_val_i ( run_count_i  ),
+        .cnt_i     ( w_cnt_w      ),
+        .idle_o    ( w_idle_w     ),
+        .run_o     ( w_run_w      ),
+        .done_o    ( w_done_w     )
+    );
+
+    assign addr_b1_o = w_cnt_w;
+    assign ce_b1_o = total_valid_o;
+    assign we_b1_o = 1;
+    assign d_b1_o = {result_1, result_2, result_3, result_4};
+
+    assign idle_o = r_idle_w;
+    assign read_o = check_w;
+    assign write_o = w_run_w;
+    assign done_o = w_done_w;
+
+
 
 endmodule

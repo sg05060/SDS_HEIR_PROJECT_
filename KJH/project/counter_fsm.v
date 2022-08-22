@@ -10,6 +10,7 @@ module Counter_fsm #(
     input [CNT_WIDTH-1:0] cnt_val_i,  // purpose of count
     input [CNT_WIDTH-1:0] cnt_i,      // counter counting number
     
+    output idle_o,
     output run_o,
     output done_o
 );
@@ -60,6 +61,7 @@ module Counter_fsm #(
         endcase
     end
     
+    assign idle_o   = (c_state == IDLE);
     assign run_o    = (c_state == RUN);
     assign done_o   = (c_state == DONE);
 
