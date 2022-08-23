@@ -149,10 +149,10 @@ module BRAM_accessor
             number_n <= 0;
         end else begin
             number_n <= q_b0_i;
-            number_1 <= number_n[1 * IN_DATA_WIDTH - 1 : 0];
-            number_2 <= number_n[2 * IN_DATA_WIDTH - 1 : 1 * IN_DATA_WIDTH];
-            number_3 <= number_n[3 * IN_DATA_WIDTH - 1 : 2 * IN_DATA_WIDTH];
-            number_4 <= number_n[4 * IN_DATA_WIDTH - 1 : 3 * IN_DATA_WIDTH];
+            number_1 <= number_n [1 * IN_DATA_WIDTH - 1 : 0];
+            number_2 <= number_n [2 * IN_DATA_WIDTH - 1 : 1 * IN_DATA_WIDTH];
+            number_3 <= number_n [3 * IN_DATA_WIDTH - 1 : 2 * IN_DATA_WIDTH];
+            number_4 <= number_n [4 * IN_DATA_WIDTH - 1 : 3 * IN_DATA_WIDTH];
         end        
     end
 
@@ -161,10 +161,10 @@ module BRAM_accessor
     wire total_valid_o;
 
     //acc_core_first
-    acc_core_complete#(
+    acc_core#(
         .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
         .DWIDTH        ( 2 * IN_DATA_WIDTH )
-    )u_acc_core_complete_1(
+    )u_acc_core_1(
         .clk           ( clk           ),
         .reset_n       ( reset_n       ),
         .number_i      ( number_1      ),
@@ -175,10 +175,10 @@ module BRAM_accessor
     );
 
     //acc_core_second
-    acc_core_complete#(
+    acc_core_#(
         .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
         .DWIDTH        ( 2 * IN_DATA_WIDTH )
-    )u_acc_core_complete_2(
+    )u_acc_core_2(
         .clk           ( clk           ),
         .reset_n       ( reset_n       ),
         .number_i      ( number_2      ),
@@ -189,10 +189,10 @@ module BRAM_accessor
     );
 
     //acc_core_third
-    acc_core_complete#(
+    acc_core#(
         .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
         .DWIDTH        ( 2 * IN_DATA_WIDTH )
-    )u_acc_core_complete_3(
+    )u_acc_core_3(
         .clk           ( clk           ),
         .reset_n       ( reset_n       ),
         .number_i      ( number_3      ),
@@ -203,10 +203,10 @@ module BRAM_accessor
     );
 
     //acc_core_fourth
-    acc_core_complete#(
+    acc_core#(
         .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
         .DWIDTH        ( 2 * IN_DATA_WIDTH )
-    )u_acc_core_complete_4(
+    )u_acc_core_4(
         .clk           ( clk           ),
         .reset_n       ( reset_n       ),
         .number_i      ( number_4      ),
@@ -256,7 +256,6 @@ module BRAM_accessor
     assign read_o = check_w;
     assign write_o = w_run_w;
     assign done_o = w_done_w;
-
 
 
 endmodule
