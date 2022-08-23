@@ -93,7 +93,7 @@ module BRAM_accessor
     wire r_idle_w;
     wire r_run_w;
     wire r_done_w;
-    wire r_cnt_w;
+    wire [CNT_BIT - 1 : 0] r_cnt_w;
 
     //read counter inst
     Counter#(
@@ -175,7 +175,7 @@ module BRAM_accessor
     );
 
     //acc_core_second
-    acc_core_#(
+    acc_core#(
         .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
         .DWIDTH        ( 2 * IN_DATA_WIDTH )
     )u_acc_core_2(
@@ -221,7 +221,7 @@ module BRAM_accessor
     wire w_idle_w;
     wire w_run_w;
     wire w_done_w;
-    wire w_cnt_w;
+    wire [CNT_BIT - 1 : 0] w_cnt_w;
 
     //write counter inst
     Counter#(
