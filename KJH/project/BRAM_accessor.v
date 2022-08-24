@@ -250,11 +250,11 @@ module BRAM_accessor
     assign addr_b1_o = w_cnt_w;
     assign ce_b1_o = total_valid_o;
     assign we_b1_o = 1;
-    assign d_b1_o = {result_1, result_2, result_3, result_4};
+    assign d_b1_o = {result_4, result_3, result_2, result_1};
 
     assign idle_o = r_idle_w;
     assign read_o = check_w;
-    assign write_o = w_run_w;
+    assign write_o = total_valid_o;
     assign done_o = w_done_w;
 
 
