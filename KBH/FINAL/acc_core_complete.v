@@ -16,6 +16,8 @@
 //
 // Notice
 //      this module has 2(1) cycle latency
+`timescale 1ns/1ps
+`define DELTA 0.5
 
 module acc_core_complete
 # (
@@ -52,13 +54,16 @@ module acc_core_complete
 
     // 1 cycle latency
     reg                  r_valid;
+    reg                  valid_oneclockpast;
     reg [DWIDTH - 1 : 0] r_result;
 
     always @(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
             r_valid <= 1'b0;
+            valid_oneclockpast <= 0;
         end else begin
             r_valid <= valid_i;
+            valid_oneclockpast <= valid_i;
         end
     end
 
@@ -70,10 +75,12 @@ module acc_core_complete
             r_result <= 0;
         end else if(valid_i) begin
             r_result <= r_result + number_i;
+        end else if(valid_oneclockpast == 1 && valid_i==0) begin
+            r_result <= r_result + number_i;
         end
     end
 
     // assign valid_o  = r_valid[1];
-    assign valid_o = r_valid;
-    assign result_o = r_result;
+    assign #2 valid_o = r_valid;
+    assign #2 result_o = r_result;
 endmodule

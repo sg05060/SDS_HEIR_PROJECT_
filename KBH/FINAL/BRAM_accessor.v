@@ -38,16 +38,14 @@
 //          ce_b0_o/ce_b1_o: chip enable
 //          we_b0_o/we_b1_o: write enable. 0 means read mode and 1 means write mode
 //          d_b0_o/d_b1_o: data that user wants to write
-//          The data of bram0[0] cannot be assigned.
-//          bram0[1] >>>  bram1[0]
-//          bram0[255] >>> bram1[254] bram1[255]
-//          There is because of the delay
+//
 
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
+`define DELTA 0.5
 
 module BRAM_accessor 
 # (
-    parameter CNT_BIT = 31,
+    parameter CNT_BIT = 31, //AWIDTH랑 같아야지않나? 몰라
 
     /* parameter for BRAM */
     parameter DWIDTH_1 = 32,
@@ -173,20 +171,20 @@ module BRAM_accessor
 
 
 
-    assign read_o = valid_o_from_counter;
-    assign write_o = valid_o_from_acc_core_complete;
+    assign #2 read_o = valid_o_from_counter;
+    assign #2 write_o = valid_o_from_acc_core_complete;
 
     /* Memory I/F output for BRAM0 */
-    assign addr_b0_o = cnt_o_from_counter;
-    assign ce_b0_o = valid_o_from_counter;
-    assign we_b0_o = 0; // read only
-    //assign d_bo_0 = 안함 // ======여기 뭟 넣어야 되지?
+    assign #2 addr_b0_o = cnt_o_from_counter;
+    assign #2 ce_b0_o = valid_o_from_counter;
+    assign #2 we_b0_o = 0; // read only
+    //assign d_bo_0 = 안함 
     //읽어온 값(q)은 위에 인스트에서 처리
 
     /* Memory I/F output for BRAM1 */
-    assign addr_b1_o = cnt; //딜레이된 주소값
-    assign ce_b1_o = valid_o_from_acc_core_complete;
-    assign we_b1_o = 1; //wirte only
+    assign #2 addr_b1_o = cnt; //딜레이된 주소값
+    assign #2 ce_b1_o = valid_o_from_acc_core_complete;
+    assign #2 we_b1_o = 1; //wirte only
     //쓸 값(d)은 위에 인스트에서 처리
 
 endmodule

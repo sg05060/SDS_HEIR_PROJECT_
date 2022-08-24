@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`define DELTA 0.5
 module Counter_fsm #(
     parameter CNT_WIDTH = 7
     )
@@ -51,7 +53,7 @@ module Counter_fsm #(
                 end 
             end
             RUN : begin
-                if (cnt_i == cnt_val - 2) begin
+                if (cnt_i == cnt_val - 1) begin
                     n_state = DONE; // if counter number is equal to cnt_val, transition to DONE state
                 end
             end
@@ -61,9 +63,9 @@ module Counter_fsm #(
         endcase
     end
     
-    assign idle_o   = (c_state == IDLE);
-    assign run_o    = (c_state == RUN);
-    assign done_o   = (c_state == DONE);
+    assign #2 idle_o   =  (c_state == IDLE);
+    assign #2 run_o    = (c_state == RUN);
+    assign #2 done_o   = (c_state == DONE);
 
 
 endmodule
