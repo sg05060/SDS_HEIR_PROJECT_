@@ -63,25 +63,25 @@ module tb_BRAM_accessor # (
     always #5 clk   = ~clk;
     
     // bram0에서 가져올 때 쓸 always문
-    always @(posedge clk) begin
+    always @(*) begin
         if(ce_b0_o) begin
             if(we_b0_o) ;
-            else      q_b0_i <= bram0[addr_b0_o];
+            else      q_b0_i = bram0[addr_b0_o];
         end
     end
 
     // bram1에 쓸 때 쓸 always문
-    always @(posedge clk) begin
+    always @(*) begin
         if(ce_b1_o) begin
             if(we_b1_o) begin 
-                bram1[addr_b1_o] <= d_b1_o;
+                bram1[addr_b1_o] = d_b1_o;
 
                 //아래 5줄은 테벤 결과에서 확인하려고함.
-                written_data  <= d_b1_o; 
-                written_data_sliced1 <= d_b1_o[(DWIDTH_2/4)*4 - 1 : (DWIDTH_2/4)*3];
-                written_data_sliced2 <= d_b1_o[(DWIDTH_2/4)*3 - 1 : (DWIDTH_2/4)*2];
-                written_data_sliced3 <= d_b1_o[(DWIDTH_2/4)*2 - 1 : (DWIDTH_2/4)*1];
-                written_data_sliced4 <= d_b1_o[(DWIDTH_2/4)*1 - 1 : (DWIDTH_2/4)*0];
+                written_data  = d_b1_o; 
+                written_data_sliced1 = d_b1_o[(DWIDTH_2/4)*4 - 1 : (DWIDTH_2/4)*3];
+                written_data_sliced2 = d_b1_o[(DWIDTH_2/4)*3 - 1 : (DWIDTH_2/4)*2];
+                written_data_sliced3 = d_b1_o[(DWIDTH_2/4)*2 - 1 : (DWIDTH_2/4)*1];
+                written_data_sliced4 = d_b1_o[(DWIDTH_2/4)*1 - 1 : (DWIDTH_2/4)*0];
             end
             else      ;
         end
@@ -123,6 +123,11 @@ module tb_BRAM_accessor # (
         #(`DELTA)
         start_run_i = 1;
         run_count_i = 255; 
+
+        @(posedge clk); 
+        #(`DELTA)
+        start_run_i = 0;
+        run_count_i = 0; 
 
 
     end

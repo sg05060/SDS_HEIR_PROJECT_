@@ -51,7 +51,7 @@ module Counter_fsm #(
                 end 
             end
             RUN : begin
-                if (cnt_i == cnt_val - 1) begin
+                if (cnt_i == cnt_val - 2) begin
                     n_state = DONE; // if counter number is equal to cnt_val, transition to DONE state
                 end
             end
