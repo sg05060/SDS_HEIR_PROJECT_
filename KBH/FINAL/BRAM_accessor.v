@@ -108,7 +108,7 @@ module BRAM_accessor
     end
 
     always @(*) begin
-        cnt_n = valid_o_from_counter;    // prevent latch
+        cnt_n = valid_o_from_counter;    
     end
     
 
