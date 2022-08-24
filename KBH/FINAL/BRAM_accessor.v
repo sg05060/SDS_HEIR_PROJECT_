@@ -38,13 +38,16 @@
 //          ce_b0_o/ce_b1_o: chip enable
 //          we_b0_o/we_b1_o: write enable. 0 means read mode and 1 means write mode
 //          d_b0_o/d_b1_o: data that user wants to write
-//
+//          The data of bram0[0] cannot be assigned.
+//          bram0[1] >>>  bram1[0]
+//          bram0[255] >>> bram1[254] bram1[255]
+//          There is because of the delay
 
 `timescale 1ns / 1ps
 
 module BRAM_accessor 
 # (
-    parameter CNT_BIT = 31, //AWIDTH랑 같아야지않나? 몰라
+    parameter CNT_BIT = 31,
 
     /* parameter for BRAM */
     parameter DWIDTH_1 = 32,
@@ -108,7 +111,7 @@ module BRAM_accessor
     end
 
     always @(*) begin
-        cnt_n = valid_o_from_counter;    // prevent latch
+        cnt_n = cnt_o_from_counter;    
     end
     
 
@@ -139,6 +142,8 @@ module BRAM_accessor
     final_state u_final_state(
         .clk    ( clk    ),
         .rst_n  ( reset_n  ),
+        .read_i ( valid_o_from_counter ),
+        .write_i (valid_o_from_acc_core_complete),
         .idle_i ( idle_o_from_FSM ),
         .done_i ( done_o_from_FSM ),
         .idle_o ( idle_o ), // final output
@@ -149,8 +154,8 @@ module BRAM_accessor
     generate
         for (i = 0; i < (DWIDTH_1/IN_DATA_WIDTH); i = i + 1) begin : gen_acc_loop
             acc_core_complete#(
-                .IN_DATA_WIDTH ( IN_DATA_WIDTH ),
-                .DWIDTH        ( IN_DATA_WIDTH )  //읽고쓰는 데이터 너비 같게함.
+                .IN_DATA_WIDTH ( DWIDTH_1/4 ),
+                .DWIDTH        ( DWIDTH_2/4 ) 
             )u_acc_core_complete(
                 .clk           ( clk           ),
                 .reset_n       ( reset_n       ),
@@ -174,14 +179,14 @@ module BRAM_accessor
     /* Memory I/F output for BRAM0 */
     assign addr_b0_o = cnt_o_from_counter;
     assign ce_b0_o = valid_o_from_counter;
-    assign we_b0_o = !valid_o_from_counter; // read only
+    assign we_b0_o = 0; // read only
     //assign d_bo_0 = 안함 // ======여기 뭟 넣어야 되지?
     //읽어온 값(q)은 위에 인스트에서 처리
 
     /* Memory I/F output for BRAM1 */
     assign addr_b1_o = cnt; //딜레이된 주소값
     assign ce_b1_o = valid_o_from_acc_core_complete;
-    assign we_b1_o = valid_o_from_acc_core_complete; //wirte only
+    assign we_b1_o = 1; //wirte only
     //쓸 값(d)은 위에 인스트에서 처리
 
 endmodule

@@ -21,7 +21,7 @@ module Counter #(
     // Local param
     
     // declare reg type variable(cnt -> flipflop, cnt_n -> comb)
-    reg [CNT_WIDTH-1:0] cnt, cnt_n;
+    reg [CNT_WIDTH-1:0] cnt, cnt_n, cnt_final;
     reg valid;
     reg valid_n;
     
@@ -63,10 +63,19 @@ module Counter #(
             valid_n = 1'b0;
         end
     end
-    
+
+    //cnt한번더 늦추기
+    always @(posedge clk, negedge rst_n) begin
+        if(!rst_n) begin
+            cnt_final <= 0;
+        end else begin
+            cnt_final <= cnt;
+        end
+    end
+
 
     // 3. output assign statement
-    assign cnt_o = cnt;
+    assign cnt_o = cnt_final;
     assign valid_o = valid;
     
 endmodule
