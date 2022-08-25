@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`define DELTA 2
+`define DELTA 0.5
 
 module tb_BRAM_accessor # (
     parameter CNT_BIT = 31, //AWIDTH랑 같아야지않나? 몰라

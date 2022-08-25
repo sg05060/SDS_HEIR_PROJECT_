@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`define DELTA 0.5
 
 module Counter #(
     // parameter
@@ -21,40 +23,35 @@ module Counter #(
     // Local param
     
     // declare reg type variable(cnt -> flipflop, cnt_n -> comb)
-    reg [CNT_WIDTH-1:0] cnt, cnt_n, cnt_final;
+    reg [CNT_WIDTH-1:0] cnt;
     reg valid;
-    reg valid_n;
     
     
     // 1. counter seq logic
     always @(posedge clk, negedge rst_n) begin
         if (!rst_n) begin
             cnt <= {(CNT_WIDTH){1'b0}};
+        end else if (done_i) begin
+            cnt <= {(CNT_WIDTH){1'b0}};
+        end else if (en) begin
+            cnt <= cnt + 'd1;
         end else begin
-            cnt <= cnt_n;
         end
     end
     
-    // 2. counter comb logic
-    always @(*) begin
-        cnt_n = cnt;    // prevent latch
-        if (en) begin
-            cnt_n = cnt + 'd1;
-        end else if (done_i) begin
-            cnt_n = {(CNT_WIDTH){1'b0}};
-        end
-    end
 
     // 3. valid_o logic
-    always @(posedge clk, negedge rst_n) begin
-        if (!rst_n) begin
-            valid <= 1'b0;
+    always @(*) begin
+        if (!rst_n || done_i) begin
+            valid = 1'b0;
+        end else if (en) begin
+            valid = 1'b1;
         end else begin
-            valid <= valid_n;
+            valid = 1'b0;
         end
     end
     
-    // 4. vallid_o comb logic
+    /*// 4. vallid_o comb logic
     always @(*) begin
         valid_n = valid;    // prevent latch
         if (en) begin
@@ -62,20 +59,10 @@ module Counter #(
         end else if (done_i) begin
             valid_n = 1'b0;
         end
-    end
+    end*/
 
-    //cnt한번더 늦추기
-    always @(posedge clk, negedge rst_n) begin
-        if(!rst_n) begin
-            cnt_final <= 0;
-        end else begin
-            cnt_final <= cnt;
-        end
-    end
-
-
-    // 3. output assign statement
-    assign cnt_o = cnt_final;
-    assign valid_o = valid;
+    //  output assign statement
+    assign #2 cnt_o = cnt;
+    assign #2 valid_o = valid;
     
 endmodule
