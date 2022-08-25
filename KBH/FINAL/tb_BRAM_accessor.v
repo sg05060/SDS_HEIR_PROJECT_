@@ -56,6 +56,8 @@ module tb_BRAM_accessor # (
 
 
     integer i; // bram0에 데이터 넣을 때 쓸 것.
+    /*integer status;
+    reg [7:0] a_0, a_1, a_2, a_3;*/
     reg [DWIDTH_1 - 1 : 0] bram0[0 : MEM_SIZE - 1];
     reg [DWIDTH_2 - 1 : 0] bram1[0 : MEM_SIZE - 1];
 
@@ -87,6 +89,7 @@ module tb_BRAM_accessor # (
         end
     end
 
+
     //초기값 설정
     initial begin
         clk         = 0;
@@ -102,9 +105,13 @@ module tb_BRAM_accessor # (
             bram0[i] =     //32비트 1 3 5 7 각 사분자리에 삽입.
             'b00000001000000110000010100000111;
         end
-    end
 
-    initial begin
+        /*$display("Mem write to BRAM0 [%d]", $time);
+        for (i = 0; i < MEM_SIZE; i = i+1) begin
+            status = $fscanf(f_in_node, "%d %d %d %d \n", a_0, a_1, a_2, a_3);
+            bram0_inst.bram0[i] = {a_0, a_1, a_2, a_3};
+        end*/
+
         @(posedge clk); //간격
 
         @(posedge clk); 
