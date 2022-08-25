@@ -56,7 +56,7 @@ module tb_BRAM_accessor # (
 
 
     integer i; // bram0에 데이터 넣을 때 쓸 것.
-    //reg [7:0] a_0, a_1, a_2, a_3;
+
     reg [DWIDTH_1 - 1 : 0] bram0[0 : MEM_SIZE - 1];
     reg [DWIDTH_2 - 1 : 0] bram1[0 : MEM_SIZE - 1];
 
@@ -88,6 +88,10 @@ module tb_BRAM_accessor # (
         end
     end
 
+    //txt파일에서 인풋받아오기
+    integer file1, status;
+    reg [7:0] a_0, a_1, a_2, a_3;
+    reg [31:0] stay;
 
     //초기값 설정
     initial begin
@@ -100,16 +104,23 @@ module tb_BRAM_accessor # (
         q_b0_i = 0;
         q_b1_i = 0;
 
-        for (i = 0; i < MEM_SIZE ; i = i + 1) begin 
+        /*for (i = 0; i < MEM_SIZE ; i = i + 1) begin 
             bram0[i] =     //32비트 1 3 5 7 각 사분자리에 삽입.
             'b00000001000000110000010100000111;
-        end
-
-        /*$display("Mem write to BRAM0 [%d]", $time);
-        for (i = 0; i < MEM_SIZE; i = i+1) begin
-            status = $fscanf(f_in_node, "%d %d %d %d \n", a_0, a_1, a_2, a_3);
-            bram0_inst.bram0[i] = {a_0, a_1, a_2, a_3};
         end*/
+
+        $display("\n\n\n\n\n\n\n\n\nMem write to BRAM0 \n\n\n\n\n\n\n\n\n\n\n\n\n");
+        file1 = $fopen("C:/bram0input.txt", "r");
+        for (i = 0; i < 4; i = i+1) begin
+            status = $fscanf(file1, "%d %d %d %d \n", a_0, a_1, a_2, a_3);
+            stay[31:24] = a_0;
+            stay[23:16] = a_1;
+            stay[15:8]  = a_2;
+            stay[7:0]   = a_3;
+            bram0[i]    = stay;
+            //bram0_inst.bram0[i] = {a_0, a_1, a_2, a_3};
+        end
+        $fclose(file1);
 
         @(posedge clk); //간격
 
@@ -128,15 +139,19 @@ module tb_BRAM_accessor # (
         @(posedge clk); 
         #(`DELTA)
         start_run_i = 1;
-        run_count_i = 255; 
+        // ===============================================
+        // run_count_i 4로 넣었음!! 메모장 row 개수
+        run_count_i = 4; 
 
         @(posedge clk); 
         #(`DELTA)
         start_run_i = 0;
         run_count_i = 0; 
-        
+
+        /*
         #4000
         $finish;
+        */
 
     end
 

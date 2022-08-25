@@ -54,7 +54,7 @@ module acc_core_complete
 
     // 1 cycle latency
     reg                  r_valid;
-    reg                  valid_oneclockpast;
+    reg                  valid_oneclockpast; //한 클락 전의 vaild_in을 저장한다.
     reg [DWIDTH - 1 : 0] r_result;
 
     always @(posedge clk or negedge reset_n) begin
@@ -76,6 +76,9 @@ module acc_core_complete
         end else if(valid_i) begin
             r_result <= r_result + number_i;
         end else if(valid_oneclockpast == 1 && valid_i==0) begin
+            // vaild_in이 0이더라도 한클락전의 valid_in이 1이라면 누산을 한다.
+            // 즉 valid_in이 1이 되자마자 바로 다음 클락이 튈 때 valid_o가 1이되고 누산을 들어가며
+            // valid _in 이 0이 되면 다음 다음 클락이 튈 때 valid_o가 0이 나간다.
             r_result <= r_result + number_i;
         end
     end
