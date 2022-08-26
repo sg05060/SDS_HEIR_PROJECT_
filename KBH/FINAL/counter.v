@@ -41,6 +41,8 @@ module Counter #(
     
 
     // 3. valid_o logic
+    // 조합회로로서 en이 1이되면 바로 valid가 1이 방출된다.
+    // 즉 counter_fsm에서 run이 되자마자 바로 이 카운터는 주소값을 방출한다.
     always @(*) begin
         if (!rst_n || done_i) begin
             valid = 1'b0;
@@ -62,6 +64,7 @@ module Counter #(
     end*/
 
     //  output assign statement
+    // 써도되는 주소값을 방출하는지 확인하는 valid_o를 쓴다.
     assign #2 cnt_o = cnt;
     assign #2 valid_o = valid;
     
