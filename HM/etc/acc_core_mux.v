@@ -17,11 +17,11 @@
 // Notice
 //      this module has 2 cycle latency
 
-module acc_core
+module acc_core_mux
 # (
-    parameter IN_DATA_WIDTH 
-    parameter DWIDTH 
-) 
+    parameter IN_DATA_WIDTH = 8,
+    parameter DWIDTH = IN_DATA_WIDTH * 4
+)
 (
     input clk, reset_n,
 
@@ -63,7 +63,7 @@ reg [DWIDTH - 1 : 0] result, result_n;
     end else if (run_i) begin
       valid <= 1'b0;
     end else begin
-      valid <= valid_n
+      valid <= valid_n;
     end
   end
 
