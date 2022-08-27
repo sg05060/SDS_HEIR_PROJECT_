@@ -44,14 +44,14 @@
 
 module BRAM_accessor 
 # (
-    parameter CNT_BIT = 
+    parameter CNT_BIT = 31,
 
     /* parameter for BRAM */
-    parameter DWIDTH_1 
-    parameter DWIDTH_2 
-    parameter AWIDTH = 
-    parameter MEM_SIZE 
-    parameter IN_DATA_WIDTH 
+    parameter DWIDTH_1 = 32,
+    parameter DWIDTH_2 = 64,
+    parameter AWIDTH = 8,
+    parameter MEM_SIZE = 256,
+    parameter IN_DATA_WIDTH = 8
 )
 (
     /* Special Inputs*/
@@ -86,6 +86,95 @@ module BRAM_accessor
     output we_b1_o,
     output [DWIDTH_2 - 1 : 0] d_b1_o
 );
+core_controller#(
+    .CNT_WIDTH   ( 12 ),
+    .DATA_WIDTH  ( 32 ),
+    .CNT_BIT     ( 31 ),
+    .IN_DATA_WIDTH ( 8 )
+)u_core_controller(
+    .clk         ( clk         ),
+    .rst_n       ( rst_n       ),
+    .start_run_i ( start_run_i ),
+    .number_i    ( number_o    ),
+    .valid_core_i     ( valid_o     ),
+    .result_o    ( result_o    ),
+    .valid_core_o     ( valid_core_o     )
+);
 
+  wire [AWIDTH - 1 : 0] addr_b0_w;
+  wire ce_b0_w;
+  wire we_b0_w;
+  wire [DWIDTH_1 - 1 : 0] d_b0_w;
+ 
+  wire [AWIDTH - 1 : 0] addr_b1_w;
+  wire ce_b1_w;
+  wire we_b1_w;
+  wire [DWIDTH_2 - 1 : 0] d_b1_w;
+
+  wire done_w, read_w, write_w;
+
+input_controller#(
+    .CNT_WIDTH                   ( 12 ),
+    .DATA_WIDTH                  ( 32 ),
+    .CNT_BIT                     ( 31 )
+)u_input_controller(
+    .clk                         ( clk                         ),
+    .rst_n                       ( rst_n                       ),
+    .q0_o                        ( q0_o                        ),
+    .q1_o                        ( q1_o                        ),
+    .start_run_i                 ( start_run_i                 ),
+    .run_count_i                 ( run_count_i                 ),
+    .read_o                      ( read_w                      ),
+    .number_o                    ( number_o                    ),
+    .valid_o                     ( valid_o                     ),
+    .addr0_o                     ( addr_b0_w                     ),
+    .ce0_o                       ( ce_b0_w                       ),
+    .we0_o                       ( we_b0_w                       ),
+    .d0_o                        ( d_b0_w                        ),
+    .addr1_o                   ( addr1_o                     ),
+    .ce1_o                       ( ce1_o                       ),
+    .we1_o                       ( we1_o                       ),
+    .d1_o                        ( d1_o                        )
+);
+
+output_controller#(
+    .CNT_WIDTH                   ( 12 ),
+    .DATA_WIDTH                  ( 32 ),
+    .CNT_BIT                     ( 31 )
+)u_output_controller(
+    .clk                         ( clk                         ),
+    .rst_n                       ( rst_n                       ),
+    .q0_o                        ( q0_o                        ),
+    .q1_o                        ( q1_o                        ),
+    .run_count_i                 ( run_count_i                 ),
+    .result_i                    ( result_i                    ),
+    .valid_i                     ( valid_i                     ),
+    .write_o                     ( write_w                     ),
+    .done_o                      ( done_w                     ),
+    .addr0_o                     ( addr_b1_w                     ),
+    .ce0_o                       ( ce_b1_w                       ),
+    .we0_o                       ( we_b1_w                       ),
+    .d0_o                        ( d_b1_w                        ),
+    .addr1_o                    ( addr1_o                     ),
+    .ce1_o                       ( ce1_o                       ),
+    .we1_o                       ( we1_o                       ),
+    .d1_o                        ( d1_o                        )
+);
+
+// assign
+  assign idle_o = start_run_i;
+  assign read_o = read_w;
+  assign write_o = write_w;
+  assign done_o = done_w;
+
+  assign addr_b0_o = addr_b0_w;
+  assign ce_b0_o = ce_b0_w;
+  assign we_b0_o = we_b0_w;
+  assign d_b0_o = d_b0_w;
+ 
+  assign addr_b1_o = addr_b1_w;
+  assign ce_b1_o = ce_b1_w;
+  assign we_b1_o = we_b1_w;
+  assign d_b1_o = d_b1_w;
 
 endmodule
