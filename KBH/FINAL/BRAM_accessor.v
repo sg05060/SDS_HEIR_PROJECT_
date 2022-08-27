@@ -89,7 +89,6 @@ module BRAM_accessor
     output [DWIDTH_2 - 1 : 0] d_b1_o
 );
     
-    reg [AWIDTH - 1 : 0] cnt, cnt_n; //쓰기에 쓸 딜레이된 주소값
 
     wire idle_o_from_FSM;
     wire run_o_from_FSM;
@@ -97,24 +96,22 @@ module BRAM_accessor
 
     wire [AWIDTH - 1 : 0] cnt_o_from_counter;
     wire valid_o_from_counter;
+
+            // 4개의 코어에서 나오는 valid_o값들을 and로 묶을 것임.
+    wire [3:0] valid_o_from_acc_core_complete_sliced;
     wire valid_o_from_acc_core_complete;
 
-    // 데이터 쓰는 곳에 쓸 주소값 딜레이
-    always @(posedge clk or negedge reset_n) begin
-        if(!reset_n) begin
-            cnt <= 0;
-        end else begin
-            cnt <= cnt_n;
-        end
-    end
+    //counter_fsm의 done신호를 두클락딜레이시킬거임.
+    reg done_delay, done_delay_n, done_delay_nn; //쓰기에 쓸 딜레이된 던 값
 
-    always @(*) begin
-        cnt_n = cnt_o_from_counter;    
-    end
-    
+        // 데이터 쓰는 곳에 쓸 주소값 딜레이
+    reg [AWIDTH - 1 : 0] cnt, cnt_n, cnt_nn; //쓰기에 쓸 딜레이된 주소값
+
+    reg core_run; // 카운터가 bram0에 주는 ce신호보다 1클락 딜레이된 신호
 
     Counter_fsm#(
-        .CNT_WIDTH ( AWIDTH )
+        .CNT_WIDTH ( AWIDTH ) // 31비트 줬더니 오류떴음.  
+        //31비트자리랑 8비트짜리 비교는 원래 잘 안되나??
     )u_Counter_fsm(
         .clk       ( clk       ),
         .rst_n     ( reset_n     ),
@@ -125,6 +122,21 @@ module BRAM_accessor
         .run_o     ( run_o_from_FSM     ),
         .done_o    ( done_o_from_FSM    )
     );
+
+    always @(posedge clk or negedge reset_n) begin
+        if(!reset_n) begin
+            done_delay <= 0;
+            done_delay_n <= 0;
+        end else begin
+            done_delay <= done_delay_n;
+            done_delay_n <= done_delay_nn;
+        end
+    end
+
+    always @(*) begin
+        done_delay_nn = done_o_from_FSM;    
+    end
+
 
     Counter#(
         .CNT_WIDTH ( AWIDTH )
@@ -137,16 +149,29 @@ module BRAM_accessor
         .valid_o  ( valid_o_from_counter  )
     );
 
-    final_state u_final_state(
-        .clk    ( clk    ),
-        .rst_n  ( reset_n  ),
-        .read_i ( valid_o_from_counter ),
-        .write_i (valid_o_from_acc_core_complete),
-        .idle_i ( idle_o_from_FSM ),
-        .done_i ( done_o_from_FSM ),
-        .idle_o ( idle_o ), // final output
-        .done_o  ( done_o  ) // final output
-    );
+    always @(posedge clk or negedge reset_n) begin
+        if(!reset_n) begin
+            cnt <= 0;
+            cnt_n <= 0;
+        end else begin
+            cnt <= cnt_n;
+            cnt_n <= cnt_nn;
+        end
+    end
+
+    always @(*) begin
+        cnt_nn = cnt_o_from_counter;    
+    end
+    
+    // 카운터가 bram0에 주는 ce신호보다 1클락 딜레이된 신호
+    //즉 bram0에 add, ce, we를 주고 q값을 돌려받기까지 시간이 걸리기때문.
+    always @(posedge clk or negedge reset_n) begin
+        if(!reset_n) begin
+            core_run <= 0;
+        end else begin
+            core_run <= valid_o_from_counter;
+        end
+    end
 
     genvar i;
     generate
@@ -159,9 +184,9 @@ module BRAM_accessor
                 .reset_n       ( reset_n       ),
                 .number_i      ( q_b0_i[(IN_DATA_WIDTH)*(i+1) -1
                                 :(IN_DATA_WIDTH)*i]),
-                .valid_i       ( valid_o_from_counter     ),
+                .valid_i       ( core_run     ),
                 .run_i         ( start_run_i         ),
-                .valid_o       ( valid_o_from_acc_core_complete   ),
+                .valid_o       ( valid_o_from_acc_core_complete_sliced[i]   ),
                 .result_o      ( d_b1_o[(DWIDTH_2/(DWIDTH_1/IN_DATA_WIDTH))*(i+1) -1
                                 :(DWIDTH_2/(DWIDTH_1/IN_DATA_WIDTH))*i]) // final output
             );
@@ -169,22 +194,31 @@ module BRAM_accessor
     endgenerate
 
 
+    // 4개의 코어에서 나오는 valid_o값들을 and로 묶을 것임.
+    assign valid_o_from_acc_core_complete = (valid_o_from_acc_core_complete_sliced[3]
+                                        && valid_o_from_acc_core_complete_sliced[2]
+                                        && valid_o_from_acc_core_complete_sliced[1]
+                                        && valid_o_from_acc_core_complete_sliced[0]);
 
 
-    assign #2 read_o = valid_o_from_counter;
-    assign #2 write_o = valid_o_from_acc_core_complete;
+    assign read_o = valid_o_from_counter;
+    assign write_o = valid_o_from_acc_core_complete;
+    assign done_o = done_delay; // 위에서 counter_fsm 의 done신호 2번 지연시킨것.
+    //idle_o는 위의 세 개가 모두 0일 때 1이다.
+    //어차피 위의 세 개가 clk와 reset_n에 종속이기 때문에 상관없다.
+    assign idle_o = valid_o_from_counter? 0: (valid_o_from_acc_core_complete? 0: (done_delay? 0:1));
 
     /* Memory I/F output for BRAM0 */
-    assign #2 addr_b0_o = cnt_o_from_counter;
-    assign #2 ce_b0_o = valid_o_from_counter;
-    assign #2 we_b0_o = 0; // read only
+    assign addr_b0_o = cnt_o_from_counter;
+    assign ce_b0_o = valid_o_from_counter;
+    assign we_b0_o = 0; // read only
     //assign d_bo_0 = 안함 
     //읽어온 값(q)은 위에 인스트에서 처리
 
     /* Memory I/F output for BRAM1 */
-    assign #2 addr_b1_o = cnt; //딜레이된 주소값
-    assign #2 ce_b1_o = valid_o_from_acc_core_complete;
-    assign #2 we_b1_o = 1; //wirte only
+    assign addr_b1_o = cnt; //딜레이된 주소값
+    assign ce_b1_o = valid_o_from_acc_core_complete;
+    assign we_b1_o = 1; //wirte only
     //쓸 값(d)은 위에 인스트에서 처리
 
 endmodule

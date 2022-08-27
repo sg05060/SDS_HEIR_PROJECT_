@@ -65,7 +65,7 @@ module Counter #(
 
     //  output assign statement
     // 써도되는 주소값을 방출하는지 확인하는 valid_o를 쓴다.
-    assign #2 cnt_o = cnt;
-    assign #2 valid_o = valid;
+    assign cnt_o = cnt;
+    assign valid_o = valid;
     
 endmodule
