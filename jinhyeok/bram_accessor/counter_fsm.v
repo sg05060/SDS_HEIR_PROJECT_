@@ -1,4 +1,4 @@
-module counter_fsm_read #(
+module counter_fsm #(
     parameter CNT_BIT = 31  //run_count_i 가 31bit 이다.
     )
     (
@@ -10,9 +10,9 @@ module counter_fsm_read #(
     input [CNT_BIT - 1  :0] cnt_val_i,  // purpose of count
     input [CNT_BIT - 1 : 0] cnt_i,      // counter counting number
     
-    output read_idle_o,
-    output read_run_o,
-    output read_done_o,
+    output idle_o,
+    output run_o,
+    output done_o,
     output valid_o
 );
 
@@ -77,9 +77,9 @@ module counter_fsm_read #(
         valid_n = 1'b0;
     end
 
-    assign read_idle_o   = (c_state == IDLE);
-    assign read_run_o    = (c_state == RUN);
-    assign read_done_o   = (c_state == DONE);
-    assign valid_o       = valid;
+    assign idle_o   = (c_state == IDLE);
+    assign run_o    = (c_state == RUN);
+    assign done_o   = (c_state == DONE);
+    assign valid_o  = valid;
 
 endmodule
