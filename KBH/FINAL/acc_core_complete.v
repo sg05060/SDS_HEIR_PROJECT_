@@ -53,37 +53,46 @@ module acc_core_complete
     */
 
     // 1 cycle latency
-    reg                  r_valid;
-    reg                  valid_oneclockpast; //한 클락 전의 vaild_in을 저장한다.
-    reg [DWIDTH - 1 : 0] r_result;
+    reg                  r_valid, r_valid_n;
+    reg [DWIDTH - 1 : 0] r_result, r_result_n;
 
     always @(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
             r_valid <= 1'b0;
-            valid_oneclockpast <= 0;
+            r_valid_n <= 1'b0; // 얘도 와이어로서가 아닌 레지스터로서 과거 valid_i값을 저장할 것임.
         end else begin
-            r_valid <= valid_i;
-            valid_oneclockpast <= valid_i;
+            r_valid <= r_valid_n;
         end
+    end
+
+    always @(*) begin
+        r_valid_n = valid_i;
     end
 
 
     always@(posedge clk or negedge reset_n) begin
         if(!reset_n) begin
             r_result <= 0;
-        end else if(run_i) begin
-            r_result <= 0;
-        end else if(valid_i) begin
-            r_result <= r_result + number_i;
-        end else if(valid_oneclockpast == 1 && valid_i==0) begin
-            // vaild_in이 0이더라도 한클락전의 valid_in이 1이라면 누산을 한다.
-            // 즉 valid_in이 1이 되자마자 바로 다음 클락이 튈 때 valid_o가 1이되고 누산을 들어가며
-            // valid _in 이 0이 되면 다음 다음 클락이 튈 때 valid_o가 0이 나간다.
-            r_result <= r_result + number_i;
+        end else begin
+            r_result <= r_result_n;
         end
     end
 
+    always @ (*) begin 
+        r_result_n = r_result;
+        if(run_i) begin
+            r_result_n = 0;
+        end else if(r_valid_n) begin
+            r_result_n = r_result + number_i;
+        end else if(r_valid_n == 0 && r_valid == 1) begin // valid_i가 0으로 내려와도 한클락은 누산 더 함.
+            r_result_n = r_result + number_i;
+        end else begin
+            r_result = r_result;
+        end
+    end
+
+
     // assign valid_o  = r_valid[1];
-    assign #2 valid_o = r_valid;
-    assign #2 result_o = r_result;
+    assign valid_o = r_valid;
+    assign result_o = r_result;
 endmodule

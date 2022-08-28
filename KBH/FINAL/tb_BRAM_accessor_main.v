@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`define DELTA 0.5
+`define DELTA 2
 
 module tb_BRAM_accessor # (
     parameter CNT_BIT = 31, //AWIDTH랑 같아야지않나? 몰라
@@ -57,37 +57,28 @@ module tb_BRAM_accessor # (
 
     integer i; // bram0에 데이터 넣을 때 쓸 것.
     //reg [7:0] a_0, a_1, a_2, a_3;
-    reg [DWIDTH_1 - 1 : 0] bram0[0 : MEM_SIZE - 1];
-    reg [DWIDTH_2 - 1 : 0] bram1[0 : MEM_SIZE - 1];
 
     //클락 점핑
     always #5 clk   = ~clk;
     
-    // bram0에서 가져올 때 쓸 always문
+    //아래 5줄은 테벤 결과에서 확인하려고함.
+    //이게 뜨는 다음클락에 bram1에 기록됨.
     always @(*) begin
+        written_data  = d_b1_o; 
+        written_data_sliced1 = d_b1_o[(DWIDTH_2/4)*4 - 1 : (DWIDTH_2/4)*3];
+        written_data_sliced2 = d_b1_o[(DWIDTH_2/4)*3 - 1 : (DWIDTH_2/4)*2];
+        written_data_sliced3 = d_b1_o[(DWIDTH_2/4)*2 - 1 : (DWIDTH_2/4)*1];
+        written_data_sliced4 = d_b1_o[(DWIDTH_2/4)*1 - 1 : (DWIDTH_2/4)*0];
+    end
+
+    //읽어 오는 코드
+    reg [DWIDTH_1 - 1 : 0] bram0[0 : MEM_SIZE - 1];
+    always @(posedge clk) begin
         if(ce_b0_o) begin
             if(we_b0_o) ;
             else      q_b0_i = bram0[addr_b0_o];
         end
     end
-
-    // bram1에 쓸 때 쓸 always문
-    always @(*) begin
-        if(ce_b1_o) begin
-            if(we_b1_o) begin 
-                bram1[addr_b1_o] = d_b1_o;
-
-                //아래 5줄은 테벤 결과에서 확인하려고함.
-                written_data  = d_b1_o; 
-                written_data_sliced1 = d_b1_o[(DWIDTH_2/4)*4 - 1 : (DWIDTH_2/4)*3];
-                written_data_sliced2 = d_b1_o[(DWIDTH_2/4)*3 - 1 : (DWIDTH_2/4)*2];
-                written_data_sliced3 = d_b1_o[(DWIDTH_2/4)*2 - 1 : (DWIDTH_2/4)*1];
-                written_data_sliced4 = d_b1_o[(DWIDTH_2/4)*1 - 1 : (DWIDTH_2/4)*0];
-            end
-            else      ;
-        end
-    end
-
 
     //초기값 설정
     initial begin
@@ -104,6 +95,7 @@ module tb_BRAM_accessor # (
             bram0[i] =     //32비트 1 3 5 7 각 사분자리에 삽입.
             'b00000001000000110000010100000111;
         end
+
 
         /*$display("Mem write to BRAM0 [%d]", $time);
         for (i = 0; i < MEM_SIZE; i = i+1) begin
@@ -135,8 +127,7 @@ module tb_BRAM_accessor # (
         start_run_i = 0;
         run_count_i = 0; 
         
-        #4000
-        $finish;
+
 
     end
 
@@ -166,6 +157,43 @@ BRAM_accessor#(
     .ce_b1_o   ( ce_b1_o   ),
     .we_b1_o   ( we_b1_o     ),
     .d_b1_o     ( d_b1_o     )
+);
+
+/*
+true_dpbram#(
+    .DWIDTH                           ( DWIDTH_1 ),
+    .AWIDTH                           ( AWIDTH ),
+    .MEM_SIZE                         ( MEM_SIZE )
+)u_true_dpbram_for_read(
+    .clk        (  clk        ),
+    .addr0_i ( addr_b0_o ),
+    .ce0_i                            ( ce_b0_o                           ),
+    .we0_i                            ( we_b0_o                            ),
+    .d0_i                             (                              ),
+    .addr1_i ( ),
+    .ce1_i                            (                             ),
+    .we1_i                            (                            ),
+    .d1_i                             (                            ),
+    .q0_o  ( q_b0_i  ),
+    .  q1_o  (   )
+);*/
+
+true_dpbram#(
+    .DWIDTH                           ( DWIDTH_2 ),
+    .AWIDTH                           ( AWIDTH ),
+    .MEM_SIZE                         ( MEM_SIZE )
+)u_true_dpbram_for_write(
+    .clk        (  clk        ),
+    .addr0_i ( ),
+    .ce0_i                            (                            ),
+    .we0_i                            (                            ),
+    .d0_i                             (                            ),
+    .addr1_i                          ( addr_b1_o ),
+    .ce1_i                            ( ce_b1_o                           ),
+    .we1_i                            ( we_b1_o                            ),
+    .d1_i                             ( d_b1_o                             ),
+    .q0_o  (  ),
+    .  q1_o  (    )
 );
 
     

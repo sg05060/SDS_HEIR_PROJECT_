@@ -51,19 +51,34 @@ module true_dpbram
     /* Making Block Memory*/
     (* ram_style = "block" *)reg [DWIDTH - 1 : 0] ram[0 : MEM_SIZE - 1];
 
+    reg [DWIDTH - 1 : 0] save1, save2;
+    reg [DWIDTH - 1 : 0] save3, save4;
     // always block for port0
     always @(posedge clk) begin
+        ram[addr0_i] <= save1;
+        q0_o <= save2;
+        
+    end
+
+    always @(*) begin
         if(ce0_i) begin
-            if(we0_i) ram[addr0_i] <= d0_i;
-            else      q0_o <= ram[addr0_i];
+            if(we0_i) save1 = d0_i;
+            else      save2 = ram[addr0_i];
         end
     end
 
+
     // always block for port1
     always @(posedge clk) begin
+        ram[addr1_i] <= save3;
+        q1_o <= save4;
+        
+    end
+
+    always @(*) begin
         if(ce1_i) begin
-            if(we1_i) ram[addr1_i] <= d1_i;
-            else      q1_o <= ram[addr1_i];
+            if(we1_i) save3 = d1_i;
+            else      save4 = ram[addr1_i];
         end
     end
 endmodule

@@ -63,9 +63,9 @@ module Counter_fsm #(
         endcase
     end
     
-    assign #2 idle_o   =  (c_state == IDLE);
-    assign #2 run_o    = (c_state == RUN);
-    assign #2 done_o   = (c_state == DONE);
+    assign idle_o   =  (c_state == IDLE);
+    assign run_o    = (c_state == RUN);
+    assign done_o   = (c_state == DONE);
 
 
 endmodule
