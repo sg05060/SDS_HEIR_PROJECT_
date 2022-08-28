@@ -133,7 +133,7 @@ module BRAM_accessor
 
     //assign of bram0
     assign addr_b0_o = r_cnt_w;
-    assign ce_b0_o = check_w;
+    assign ce_b0_o = r_run_w;
     assign we_b0_o = 0;
     assign d_b0_o = 0;
 
@@ -233,7 +233,7 @@ module BRAM_accessor
         .cnt_o  ( w_cnt_w )
     );
 
-    //read counter_fsm inst
+    //write counter_fsm inst
     Counter_fsm#(
         .CNT_WIDTH ( AWIDTH )
     )u_Counter_fsm_write(
@@ -249,7 +249,7 @@ module BRAM_accessor
 
     assign addr_b1_o = w_cnt_w;
     assign ce_b1_o = total_valid_o;
-    assign we_b1_o = 1;
+    assign we_b1_o = total_valid_o;
     assign d_b1_o = {result_4, result_3, result_2, result_1};
 
     assign idle_o = r_idle_w;

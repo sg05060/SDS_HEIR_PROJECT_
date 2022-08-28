@@ -62,11 +62,13 @@ module tb_Bram_accessor;
         @(posedge clk); 
         #(`DELTA)
         start_run_i = 1'b0;
+        run_count_i = 'd0;
 
         for(i = 1; i <= 256; i = i + 1) begin
             @(posedge clk); 
             #(`DELTA)
-            q_b0_i = 32'b00000001000000010000000100000001;
+            q_b0_i = 32'b00000001_00000001_00000001_00000001;
+            // q_b0_i =32'h01_01_01_01
         end
 
     end
